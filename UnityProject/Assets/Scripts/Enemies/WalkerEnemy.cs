@@ -8,7 +8,6 @@ public class WalkerEnemy : EnemyBase
 {
     [Header("移動設定")]
     public float walkSpeed = 2f;
-    public LayerMask groundLayer;
     public float groundCheckDistance = 1f;
 
     [Header("追跡・攻撃設定")]
@@ -24,7 +23,7 @@ public class WalkerEnemy : EnemyBase
     {
         base.Awake();
         shootTimer = shootInterval;
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        PlayerController playerObj = Object.FindObjectOfType<PlayerController>();
         if (playerObj != null) playerTarget = playerObj.transform;
     }
 
@@ -40,8 +39,8 @@ public class WalkerEnemy : EnemyBase
     {
         Vector3 nextPos = transform.position + Vector3.right * direction * walkSpeed * Time.deltaTime;
 
-        RaycastHit2D hit = Physics2D.Raycast(nextPos + Vector3.up * 0.5f, Vector2.down, groundCheckDistance + 0.5f, groundLayer);
-        if (hit.collider != null)
+        RaycastHit2D hit = Physics2D.Raycast(nextPos + Vector3.up * 0.5f, Vector2.down, groundCheckDistance + 0.5f);
+        if (hit.collider != null && hit.collider.GetComponent<GroundTag>() != null)
         {
             nextPos.y = hit.point.y;
             transform.position = nextPos;

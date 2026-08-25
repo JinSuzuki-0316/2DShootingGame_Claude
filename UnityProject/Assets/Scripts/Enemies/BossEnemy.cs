@@ -33,7 +33,7 @@ public class BossEnemy : EnemyBase
     {
         base.Awake();
         patternTimer = patternInterval;
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        PlayerController playerObj = Object.FindObjectOfType<PlayerController>();
         if (playerObj != null) playerTarget = playerObj.transform;
     }
 

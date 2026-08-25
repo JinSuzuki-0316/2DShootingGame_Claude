@@ -163,18 +163,21 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    /// <summary>敵弾・敵機との接触処理</summary>
+    /// <summary>敵弾・敵機との接触処理（タグを使わずコンポーネントの有無で判定）</summary>
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (isInvincible) return;
 
-        if (other.CompareTag("EnemyBullet") || other.CompareTag("Enemy"))
+        bool isEnemyBullet = other.GetComponent<EnemyBullet>() != null;
+        bool isEnemyBody = other.GetComponent<EnemyBase>() != null;
+
+        if (isEnemyBullet || isEnemyBody)
         {
             if (currentBarrier != null)
             {
                 Barrier barrier = currentBarrier.GetComponent<Barrier>();
                 barrier.TakeHit();
-                Destroy(other.gameObject.CompareTag("EnemyBullet") ? other.gameObject : null);
+                if (isEnemyBullet) Destroy(other.gameObject);
                 return;
             }
 

@@ -46,10 +46,10 @@ public class EnemyBase : MonoBehaviour
         Destroy(gameObject);
     }
 
-    /// <summary>自機との接触（体当たり）ダメージ</summary>
+    /// <summary>自機との接触（体当たり）ダメージ（タグを使わずコンポーネントの有無で判定）</summary>
     protected virtual void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.GetComponent<PlayerController>() != null)
         {
             // プレイヤー側のダメージ処理はPlayerController側で行う
             Die();

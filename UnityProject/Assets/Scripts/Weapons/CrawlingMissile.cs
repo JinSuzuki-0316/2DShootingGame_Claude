@@ -9,7 +9,6 @@ public class CrawlingMissile : MonoBehaviour
     public float fallSpeed = 6f;
     public float crawlSpeed = 5f;
     public int damage = 2;
-    public LayerMask groundLayer;
     public float groundCheckDistance = 0.6f;
 
     private bool isCrawling = false;
@@ -21,8 +20,8 @@ public class CrawlingMissile : MonoBehaviour
         {
             transform.position += Vector3.down * fallSpeed * Time.deltaTime;
 
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance, groundLayer);
-            if (hit.collider != null)
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, groundCheckDistance);
+            if (hit.collider != null && hit.collider.GetComponent<GroundTag>() != null)
             {
                 isCrawling = true;
                 transform.position = hit.point;
@@ -42,9 +41,9 @@ public class CrawlingMissile : MonoBehaviour
     private void CrawlAlongGround()
     {
         Vector2 origin = transform.position + Vector3.right * direction * 0.1f + Vector3.up * 0.5f;
-        RaycastHit2D groundAhead = Physics2D.Raycast(origin, Vector2.down, 1.5f, groundLayer);
+        RaycastHit2D groundAhead = Physics2D.Raycast(origin, Vector2.down, 1.5f);
 
-        if (groundAhead.collider != null)
+        if (groundAhead.collider != null && groundAhead.collider.GetComponent<GroundTag>() != null)
         {
             Vector3 target = new Vector3(origin.x, groundAhead.point.y, transform.position.z);
             transform.position = Vector3.MoveTowards(transform.position, target, crawlSpeed * Time.deltaTime);

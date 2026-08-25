@@ -29,7 +29,7 @@ public class SmallSwarmEnemy : EnemyBase
         base.Awake();
         startPos = transform.position;
         shootTimer = shootInterval;
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        PlayerController playerObj = Object.FindObjectOfType<PlayerController>();
         if (playerObj != null) playerTarget = playerObj.transform;
     }
 

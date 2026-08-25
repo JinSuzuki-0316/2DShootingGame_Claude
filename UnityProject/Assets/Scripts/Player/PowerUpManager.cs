@@ -51,10 +51,14 @@ public class PowerUpManager : MonoBehaviour
         selectedIndex = (selectedIndex + 1) % meterOrder.Length;
     }
 
-    /// <summary>パワーアップボタン入力を毎フレームチェック</summary>
+    /// <summary>パワーアップボタン入力を毎フレームチェック（Shiftキー／ジョイスティックボタン1）</summary>
     private void Update()
     {
-        if (Input.GetButtonDown("PowerUp")) // Project SettingsでInput Axis "PowerUp" を追加してください
+        bool pressed = Input.GetKeyDown(KeyCode.LeftShift)
+                       || Input.GetKeyDown(KeyCode.RightShift)
+                       || Input.GetKeyDown(KeyCode.JoystickButton1);
+
+        if (pressed)
         {
             ActivateSelected();
         }

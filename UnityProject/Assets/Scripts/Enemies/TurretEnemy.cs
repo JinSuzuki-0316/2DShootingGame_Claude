@@ -24,7 +24,7 @@ public class TurretEnemy : EnemyBase
     {
         base.Awake();
         shootTimer = shootInterval;
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        PlayerController playerObj = Object.FindObjectOfType<PlayerController>();
         if (playerObj != null) playerTarget = playerObj.transform;
         if (muzzle == null) muzzle = transform;
     }
