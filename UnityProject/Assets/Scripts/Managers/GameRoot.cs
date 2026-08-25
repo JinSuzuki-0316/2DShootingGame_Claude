@@ -124,41 +124,74 @@ public class GameRoot : MonoBehaviour
         col.radius = radius;
     }
 
+    private static Material _trailMaterial;
+
+    private void AddTrail(GameObject go, Color color, float time, float startWidth)
+    {
+        if (_trailMaterial == null)
+        {
+            _trailMaterial = new Material(Shader.Find("Sprites/Default"));
+        }
+
+        TrailRenderer tr = go.AddComponent<TrailRenderer>();
+        tr.time = time;
+        tr.startWidth = startWidth;
+        tr.endWidth = 0f;
+        tr.material = _trailMaterial;
+        tr.startColor = color;
+        Color endColor = color;
+        endColor.a = 0f;
+        tr.endColor = endColor;
+        tr.sortingOrder = 4;
+        tr.minVertexDistance = 0.02f;
+    }
+
     // ----------------------------------------------------------------
     // プレイヤーの武器テンプレート
     // ----------------------------------------------------------------
     private void BuildWeaponTemplates()
     {
+        Color neonYellow = new Color(1f, 0.92f, 0.25f);
+        Color neonRed = new Color(1f, 0.15f, 0.35f);
+        Color neonOrange = new Color(1f, 0.55f, 0.1f);
+        Color neonCyan = new Color(0.3f, 1f, 1f);
+        Color neonMagenta = new Color(1f, 0.2f, 0.9f);
+        Color neonGreen = new Color(0.4f, 1f, 0.35f);
+        Color barrierBlue = new Color(0.35f, 0.7f, 1f, 0.45f);
+
         // 通常弾
         bulletTemplate = NewTemplate("Bullet");
-        bulletTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(Color.yellow);
+        bulletTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(neonYellow);
         AddTrigger(bulletTemplate, 0.1f);
+        AddTrail(bulletTemplate, neonYellow, 0.12f, 0.12f);
         PlayerBullet pb = bulletTemplate.AddComponent<PlayerBullet>();
         pb.direction = Vector2.right;
 
         // ダブル用の斜め弾
         bulletDiagonalTemplate = NewTemplate("BulletDiagonal");
-        bulletDiagonalTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(Color.yellow);
+        bulletDiagonalTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(neonYellow);
         AddTrigger(bulletDiagonalTemplate, 0.1f);
+        AddTrail(bulletDiagonalTemplate, neonYellow, 0.12f, 0.12f);
         PlayerBullet pbd = bulletDiagonalTemplate.AddComponent<PlayerBullet>();
         pbd.direction = new Vector2(0.7f, 0.7f);
 
         // レーザー
         laserTemplate = NewTemplate("Laser");
         SpriteRenderer laserSr = laserTemplate.AddComponent<SpriteRenderer>();
-        laserSr.sprite = SpriteFactory.CreateBar(new Color(1f, 0.2f, 0.2f), 48, 6);
+        laserSr.sprite = SpriteFactory.CreateNeonBar(neonRed, 96, 12);
         AddTrigger(laserTemplate, 0.15f);
         laserTemplate.AddComponent<PlayerLaser>();
 
         // ミサイル
         missileTemplate = NewTemplate("Missile");
-        missileTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(new Color(1f, 0.5f, 0f));
+        missileTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateDiamond(neonOrange);
         AddTrigger(missileTemplate, 0.15f);
+        AddTrail(missileTemplate, neonOrange, 0.2f, 0.15f);
         missileTemplate.AddComponent<CrawlingMissile>();
 
         // オプション（分身）
         optionTemplate = NewTemplate("Option");
-        optionTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(new Color(0.3f, 1f, 1f));
+        optionTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(neonCyan);
         OptionFollower optFollower = optionTemplate.AddComponent<OptionFollower>();
 
         GameObject optMuzzleFront = new GameObject("MuzzleFront");
@@ -174,19 +207,20 @@ public class GameRoot : MonoBehaviour
         // バリア
         barrierTemplate = NewTemplate("Barrier");
         SpriteRenderer barrierSr = barrierTemplate.AddComponent<SpriteRenderer>();
-        barrierSr.sprite = SpriteFactory.CreateCircle(new Color(0.4f, 0.7f, 1f, 0.5f));
+        barrierSr.sprite = SpriteFactory.CreateCircle(barrierBlue);
         barrierTemplate.transform.localScale = Vector3.one * 1.8f;
         barrierTemplate.AddComponent<Barrier>();
 
         // 敵弾
         enemyBulletTemplate = NewTemplate("EnemyBullet");
-        enemyBulletTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(Color.magenta);
+        enemyBulletTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(neonMagenta);
         AddTrigger(enemyBulletTemplate, 0.12f);
+        AddTrail(enemyBulletTemplate, neonMagenta, 0.1f, 0.08f);
         enemyBulletTemplate.AddComponent<EnemyBullet>();
 
         // パワーアップカプセル
         capsuleTemplate = NewTemplate("PowerCapsule");
-        capsuleTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(Color.green);
+        capsuleTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateDiamond(neonGreen);
         AddTrigger(capsuleTemplate, 0.2f);
         capsuleTemplate.AddComponent<PowerCapsule>();
     }
@@ -196,28 +230,36 @@ public class GameRoot : MonoBehaviour
     // ----------------------------------------------------------------
     private void BuildEnemyTemplates()
     {
-        // 敵種1：小型機（群れ）
+        Color swarmColor = new Color(1f, 0.35f, 0.25f);
+        Color turretColor = new Color(0.55f, 0.65f, 0.8f);
+        Color hatchColor = new Color(0.75f, 0.25f, 0.95f);
+        Color walkerColor = new Color(0.85f, 0.55f, 0.2f);
+        Color bossSclera = new Color(0.45f, 0.05f, 0.08f);
+        Color bossPupil = new Color(1f, 0.2f, 0.15f);
+
+        // 敵種1：小型機（群れ）－ ダイヤ形で鋭い印象
         smallSwarmTemplate = NewTemplate("SmallSwarmEnemy");
-        smallSwarmTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(new Color(1f, 0.3f, 0.3f));
+        smallSwarmTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateDiamond(swarmColor);
         AddTrigger(smallSwarmTemplate, 0.3f);
         SmallSwarmEnemy swarm = smallSwarmTemplate.AddComponent<SmallSwarmEnemy>();
         swarm.maxHealth = 1;
         swarm.scoreValue = 100;
         swarm.bulletPrefab = enemyBulletTemplate;
 
-        // 敵種2：砲台・ローパー
+        // 敵種2：砲台・ローパー － 八角形で機械的な印象
         turretTemplate = NewTemplate("TurretEnemy");
-        turretTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(new Color(0.6f, 0.6f, 0.6f));
+        turretTemplate.transform.localScale = Vector3.one * 1.2f;
+        turretTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateOctagon(turretColor);
         AddTrigger(turretTemplate, 0.4f);
         TurretEnemy turret = turretTemplate.AddComponent<TurretEnemy>();
         turret.maxHealth = 3;
         turret.scoreValue = 300;
         turret.bulletPrefab = enemyBulletTemplate;
 
-        // 敵種3：ハッチ（クラブ）
+        // 敵種3：ハッチ（クラブ）－ グロー付きの大きな円
         hatchTemplate = NewTemplate("HatchEnemy");
-        hatchTemplate.transform.localScale = Vector3.one * 1.4f;
-        hatchTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(new Color(0.7f, 0.2f, 0.8f));
+        hatchTemplate.transform.localScale = Vector3.one * 1.5f;
+        hatchTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(hatchColor);
         AddTrigger(hatchTemplate, 0.45f);
         HatchEnemy hatch = hatchTemplate.AddComponent<HatchEnemy>();
         hatch.maxHealth = 5;
@@ -226,19 +268,19 @@ public class GameRoot : MonoBehaviour
         hatch.isRedVariant = true; // 赤色＝撃破でカプセルドロップ
         hatch.powerCapsulePrefab = capsuleTemplate;
 
-        // 敵種4：歩行・移動型（ダッカー）
+        // 敵種4：歩行・移動型（ダッカー）－ 縁取り四角
         walkerTemplate = NewTemplate("WalkerEnemy");
-        walkerTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(new Color(0.5f, 0.35f, 0.2f));
+        walkerTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateSquare(walkerColor);
         AddTrigger(walkerTemplate, 0.3f);
         WalkerEnemy walker = walkerTemplate.AddComponent<WalkerEnemy>();
         walker.maxHealth = 2;
         walker.scoreValue = 200;
         walker.bulletPrefab = enemyBulletTemplate;
 
-        // 敵種5：大型・中ボス（ゴーレム／ビッグアイ）
+        // 敵種5：大型・中ボス（ゴーレム／ビッグアイ）－ 発光する目玉
         bossTemplate = NewTemplate("BossEnemy");
-        bossTemplate.transform.localScale = Vector3.one * 2.5f;
-        bossTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateCircle(new Color(0.8f, 0.1f, 0.1f));
+        bossTemplate.transform.localScale = Vector3.one * 2.8f;
+        bossTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateEye(bossSclera, bossPupil);
         AddTrigger(bossTemplate, 0.9f);
         BossEnemy boss = bossTemplate.AddComponent<BossEnemy>();
         boss.maxHealth = 40;
@@ -264,8 +306,11 @@ public class GameRoot : MonoBehaviour
         col.radius = 0.35f;
 
         SpriteRenderer sr = player.AddComponent<SpriteRenderer>();
-        sr.sprite = SpriteFactory.CreateTriangle(new Color(0.2f, 1f, 0.4f));
+        sr.sprite = SpriteFactory.CreateTriangle(new Color(0.25f, 1f, 0.55f));
         sr.sortingOrder = 10;
+
+        // エンジングロー用のトレイル（自機の後方に光の尾を引く）
+        AddTrail(player, new Color(0.3f, 1f, 0.8f, 0.6f), 0.25f, 0.3f);
 
         PowerUpManager pum = player.AddComponent<PowerUpManager>();
         PlayerController pc = player.AddComponent<PlayerController>();
@@ -311,14 +356,14 @@ public class GameRoot : MonoBehaviour
         box.size = new Vector2(40f, 1f);
 
         SpriteRenderer sr = ground.AddComponent<SpriteRenderer>();
-        sr.sprite = SpriteFactory.CreateBar(new Color(0.25f, 0.2f, 0.15f), 640, 16);
+        sr.sprite = SpriteFactory.CreateBar(new Color(0.18f, 0.12f, 0.28f), 1280, 32);
         sr.sortingOrder = -1;
 
         ground.AddComponent<GroundTag>();
     }
 
     // ----------------------------------------------------------------
-    // 横スクロール背景
+    // 横スクロール背景（星空）
     // ----------------------------------------------------------------
     private ScrollingBackground BuildBackground()
     {
@@ -327,6 +372,9 @@ public class GameRoot : MonoBehaviour
         scroller.scrollSpeed = 1.5f;
         scroller.tileWidth = 20f;
 
+        Color topColor = new Color(0.06f, 0.05f, 0.18f);
+        Color bottomColor = new Color(0.01f, 0.01f, 0.05f);
+
         Transform[] tiles = new Transform[3];
         for (int i = 0; i < 3; i++)
         {
@@ -334,7 +382,7 @@ public class GameRoot : MonoBehaviour
             tile.transform.parent = bgRoot.transform;
             tile.transform.position = new Vector3(-20f + i * 20f, 0f, 5f);
             SpriteRenderer sr = tile.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.CreateBar(new Color(0.05f, 0.05f, 0.15f), 320, 160);
+            sr.sprite = SpriteFactory.CreateStarfieldTile(640, 320, 90, topColor, bottomColor);
             sr.sortingOrder = -10;
             tiles[i] = tile.transform;
         }
@@ -413,33 +461,77 @@ public class GameRoot : MonoBehaviour
             esObj.AddComponent<StandaloneInputModule>();
         }
 
+        // 左上パネル（スコア／残機の背景）
+        CreatePanel(canvasObj.transform, "TopPanel",
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 0),
+            new Vector2(340, 90), new Color(0.03f, 0.05f, 0.1f, 0.6f), new Color(0.3f, 1f, 0.9f, 0.5f));
+
+        // 下部パネル（強化メーターの背景）
+        CreatePanel(canvasObj.transform, "BottomPanel",
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 0),
+            new Vector2(-20, 80), new Color(0.03f, 0.05f, 0.1f, 0.6f), new Color(0.3f, 1f, 0.9f, 0.35f));
+
         GameHUD hud = canvasObj.AddComponent<GameHUD>();
 
         // 左上：スコア／残機
         hud.scoreText = CreateText(canvasObj.transform, "ScoreText",
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -30),
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -20),
             new Vector2(300, 40), 28, TextAnchor.UpperLeft);
+        hud.scoreText.color = new Color(0.4f, 1f, 1f);
+        hud.scoreText.fontStyle = FontStyle.Bold;
 
         hud.livesText = CreateText(canvasObj.transform, "LivesText",
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -65),
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -55),
             new Vector2(300, 40), 22, TextAnchor.UpperLeft);
+        hud.livesText.color = new Color(0.6f, 1f, 0.6f);
 
         // 下部：強化メーター／武器状態
         hud.powerMeterText = CreateText(canvasObj.transform, "PowerMeterText",
-            new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 45),
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(10, 45),
             new Vector2(-40, 30), 20, TextAnchor.MiddleLeft);
 
         hud.powerStatusText = CreateText(canvasObj.transform, "PowerStatusText",
-            new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 15),
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(10, 15),
             new Vector2(-40, 30), 18, TextAnchor.MiddleLeft);
+        hud.powerStatusText.color = new Color(0.75f, 0.85f, 1f);
 
         // 中央：ゲームオーバー／リトライ案内
         hud.gameOverText = CreateText(canvasObj.transform, "GameOverText",
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
-            new Vector2(600, 150), 40, TextAnchor.MiddleCenter);
-        hud.gameOverText.text = "GAME OVER\nPress R to Retry";
-        hud.gameOverText.color = Color.red;
+            new Vector2(600, 150), 44, TextAnchor.MiddleCenter);
+        hud.gameOverText.text = "GAME OVER\n<size=24>Press R to Retry</size>";
+        hud.gameOverText.color = new Color(1f, 0.25f, 0.3f);
+        hud.gameOverText.fontStyle = FontStyle.Bold;
         hud.gameOverText.gameObject.SetActive(false);
+    }
+
+    private void CreatePanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
+        Vector2 anchoredPos, Vector2 size, Color fillColor, Color borderColor)
+    {
+        GameObject panel = new GameObject(name);
+        panel.transform.SetParent(parent, false);
+
+        RectTransform rt = panel.AddComponent<RectTransform>();
+        rt.anchorMin = anchorMin;
+        rt.anchorMax = anchorMax;
+        rt.pivot = anchorMin;
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+
+        Image img = panel.AddComponent<Image>();
+        img.color = fillColor;
+
+        // 細い縁取りライン（下端 or 上端の1本）を子オブジェクトとして追加し、パネルに輪郭を持たせる
+        GameObject line = new GameObject("Border");
+        line.transform.SetParent(panel.transform, false);
+        RectTransform lineRt = line.AddComponent<RectTransform>();
+        lineRt.anchorMin = new Vector2(0, 0);
+        lineRt.anchorMax = new Vector2(1, 0);
+        lineRt.pivot = new Vector2(0.5f, 0f);
+        lineRt.sizeDelta = new Vector2(0, 2);
+        lineRt.anchoredPosition = Vector2.zero;
+        Image lineImg = line.AddComponent<Image>();
+        lineImg.color = borderColor;
     }
 
     private Text CreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
@@ -463,6 +555,7 @@ public class GameRoot : MonoBehaviour
         text.alignment = alignment;
         text.color = Color.white;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.supportRichText = true;
         text.text = string.Empty;
         return text;
     }
