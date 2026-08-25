@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
     [Header("オプション")]
     public int maxOptions = 4;
     private List<OptionFollower> options = new List<OptionFollower>();
+    public int OptionCount => options.Count;
 
     [Header("バリア")]
     public GameObject currentBarrier;

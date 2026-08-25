@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// スコア・ゲームオーバー・ボス戦演出などを一元管理するシングルトン。
+/// スコア・ゲームオーバー・リトライ・ボス戦演出などを一元管理するシングルトン。
 /// </summary>
 public class GameManager : MonoBehaviour
 {
@@ -10,8 +10,9 @@ public class GameManager : MonoBehaviour
     public int score = 0;
     public bool isGameOver = false;
 
-    [Header("ボス戦演出用")]
+    [Header("参照")]
     public ScrollingBackground scroller;
+    public GameRoot gameRoot;
 
     private void Awake()
     {
@@ -23,6 +24,15 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
+    private void Update()
+    {
+        // ゲームオーバー中にRキーでリトライ（Time.timeScale=0でもInputは動作する）
+        if (isGameOver && Input.GetKeyDown(KeyCode.R))
+        {
+            Retry();
+        }
+    }
+
     public void AddScore(int amount)
     {
         score += amount;
@@ -32,7 +42,18 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         Time.timeScale = 0f;
-        // ここにゲームオーバーUI表示処理などを追加
+    }
+
+    /// <summary>ゲームを初期状態からやり直す</summary>
+    public void Retry()
+    {
+        if (gameRoot == null) gameRoot = FindObjectOfType<GameRoot>();
+        if (gameRoot == null) return;
+
+        Time.timeScale = 1f;
+        isGameOver = false;
+        score = 0;
+        gameRoot.RestartGame();
     }
 
     /// <summary>ボス出現時にスクロールを止める</summary>
@@ -47,3 +68,4 @@ public class GameManager : MonoBehaviour
         if (scroller != null) scroller.isScrolling = true;
     }
 }
+

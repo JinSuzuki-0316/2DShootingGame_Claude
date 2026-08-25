@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// シーンが空でも、Playを押した瞬間に自動でゲーム全体
@@ -35,6 +37,46 @@ public class GameRoot : MonoBehaviour
         ScrollingBackground scroller = BuildBackground();
         BuildSpawner();
         BuildGameManager(scroller);
+        BuildUI();
+    }
+
+    // ----------------------------------------------------------------
+    // リトライ（プレイヤー・地面・背景・敵スポナー・敵/弾を全て作り直す）
+    // ----------------------------------------------------------------
+    public void RestartGame()
+    {
+        DestroyAllGameplayObjects();
+
+        BuildPlayer();
+        BuildGround();
+        ScrollingBackground newScroller = BuildBackground();
+        BuildSpawner();
+
+        GameManager gm = GameManager.Instance;
+        if (gm != null) gm.scroller = newScroller;
+    }
+
+    private void DestroyAllGameplayObjects()
+    {
+        foreach (var e in FindObjectsOfType<EnemyBase>()) Destroy(e.gameObject);
+        foreach (var b in FindObjectsOfType<PlayerBullet>()) Destroy(b.gameObject);
+        foreach (var l in FindObjectsOfType<PlayerLaser>()) Destroy(l.gameObject);
+        foreach (var m in FindObjectsOfType<CrawlingMissile>()) Destroy(m.gameObject);
+        foreach (var eb in FindObjectsOfType<EnemyBullet>()) Destroy(eb.gameObject);
+        foreach (var c in FindObjectsOfType<PowerCapsule>()) Destroy(c.gameObject);
+        foreach (var o in FindObjectsOfType<OptionFollower>()) Destroy(o.gameObject);
+
+        PlayerController existingPlayer = FindObjectOfType<PlayerController>();
+        if (existingPlayer != null) Destroy(existingPlayer.gameObject);
+
+        EnemySpawner existingSpawner = FindObjectOfType<EnemySpawner>();
+        if (existingSpawner != null) Destroy(existingSpawner.gameObject);
+
+        ScrollingBackground existingBg = FindObjectOfType<ScrollingBackground>();
+        if (existingBg != null) Destroy(existingBg.gameObject);
+
+        GroundTag existingGround = FindObjectOfType<GroundTag>();
+        if (existingGround != null) Destroy(existingGround.gameObject);
     }
 
     // ----------------------------------------------------------------
@@ -342,5 +384,86 @@ public class GameRoot : MonoBehaviour
         GameObject gmObj = new GameObject("GameManager");
         GameManager gm = gmObj.AddComponent<GameManager>();
         gm.scroller = scroller;
+        gm.gameRoot = this;
+    }
+
+    // ----------------------------------------------------------------
+    // HUD（スコア／残機／強化メーター／ゲームオーバー表示）
+    // ----------------------------------------------------------------
+    private void BuildUI()
+    {
+        // 既にHUDが存在するなら作り直さない（リトライ時はGameManager/HUDを再利用するため）
+        if (FindObjectOfType<GameHUD>() != null) return;
+
+        GameObject canvasObj = new GameObject("HUDCanvas");
+        Canvas canvas = canvasObj.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+
+        CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1280, 720);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        canvasObj.AddComponent<GraphicRaycaster>();
+
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            GameObject esObj = new GameObject("EventSystem");
+            esObj.AddComponent<EventSystem>();
+            esObj.AddComponent<StandaloneInputModule>();
+        }
+
+        GameHUD hud = canvasObj.AddComponent<GameHUD>();
+
+        // 左上：スコア／残機
+        hud.scoreText = CreateText(canvasObj.transform, "ScoreText",
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -30),
+            new Vector2(300, 40), 28, TextAnchor.UpperLeft);
+
+        hud.livesText = CreateText(canvasObj.transform, "LivesText",
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(160, -65),
+            new Vector2(300, 40), 22, TextAnchor.UpperLeft);
+
+        // 下部：強化メーター／武器状態
+        hud.powerMeterText = CreateText(canvasObj.transform, "PowerMeterText",
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 45),
+            new Vector2(-40, 30), 20, TextAnchor.MiddleLeft);
+
+        hud.powerStatusText = CreateText(canvasObj.transform, "PowerStatusText",
+            new Vector2(0, 0), new Vector2(1, 0), new Vector2(0, 15),
+            new Vector2(-40, 30), 18, TextAnchor.MiddleLeft);
+
+        // 中央：ゲームオーバー／リトライ案内
+        hud.gameOverText = CreateText(canvasObj.transform, "GameOverText",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero,
+            new Vector2(600, 150), 40, TextAnchor.MiddleCenter);
+        hud.gameOverText.text = "GAME OVER\nPress R to Retry";
+        hud.gameOverText.color = Color.red;
+        hud.gameOverText.gameObject.SetActive(false);
+    }
+
+    private Text CreateText(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax,
+        Vector2 anchoredPos, Vector2 size, int fontSize, TextAnchor alignment)
+    {
+        GameObject go = new GameObject(name);
+        go.transform.SetParent(parent, false);
+
+        RectTransform rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = anchorMin;
+        rt.anchorMax = anchorMax;
+        rt.pivot = anchorMin;
+        rt.anchoredPosition = anchoredPos;
+        rt.sizeDelta = size;
+
+        Text text = go.AddComponent<Text>();
+        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        if (font == null) font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        text.font = font;
+        text.fontSize = fontSize;
+        text.alignment = alignment;
+        text.color = Color.white;
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.text = string.Empty;
+        return text;
     }
 }
