@@ -32,6 +32,7 @@ public class PowerUpManager : MonoBehaviour
     [Header("現在の状態")]
     public int stockedCapsules = 0;   // 未使用のカプセル数
     public int selectedIndex = 0;     // メーター上のカーソル位置
+    private int totalCollected = 0;   // 累計カプセル取得数（カーソル計算用）
 
     [Header("参照")]
     public PlayerController player;
@@ -48,7 +49,11 @@ public class PowerUpManager : MonoBehaviour
     public void CollectCapsule()
     {
         stockedCapsules++;
-        selectedIndex = (selectedIndex + 1) % meterOrder.Length;
+        totalCollected++;
+        // 1個目のカプセルで必ず先頭（SPEED）を指すように、取得数ベースで計算する。
+        // （以前は取得のたびに単純加算していたため1つ先の項目を指してしまい、
+        // 　最後の項目「BARRIER」にちょうど止めにくいバグがあった）
+        selectedIndex = (totalCollected - 1) % meterOrder.Length;
     }
 
     /// <summary>パワーアップボタン入力を毎フレームチェック（Shiftキー／ジョイスティックボタン1）</summary>
@@ -107,5 +112,6 @@ public class PowerUpManager : MonoBehaviour
     {
         stockedCapsules = 0;
         selectedIndex = 0;
+        totalCollected = 0;
     }
 }

@@ -182,8 +182,9 @@ public class GameRoot : MonoBehaviour
         AddTrigger(laserTemplate, 0.15f);
         laserTemplate.AddComponent<PlayerLaser>();
 
-        // ミサイル
+        // ミサイル（対地・地面を這うタイプ：細長い形状にして識別しやすくする）
         missileTemplate = NewTemplate("Missile");
+        missileTemplate.transform.localScale = new Vector3(1.6f, 0.75f, 1f);
         missileTemplate.AddComponent<SpriteRenderer>().sprite = SpriteFactory.CreateDiamond(neonOrange);
         AddTrigger(missileTemplate, 0.15f);
         AddTrail(missileTemplate, neonOrange, 0.2f, 0.15f);

@@ -12,6 +12,9 @@ public class Barrier : MonoBehaviour
     [Header("見た目のフェード演出用")]
     public SpriteRenderer sprite;
 
+    // 破壊時に自機側の参照を確実にクリアするための持ち主参照
+    public PlayerController owner;
+
     private void Awake()
     {
         remainingHits = maxHits;
@@ -42,6 +45,10 @@ public class Barrier : MonoBehaviour
     private void Break()
     {
         // 破損エフェクトなどをここに追加可能
+        if (owner != null)
+        {
+            owner.NotifyBarrierDestroyed(this);
+        }
         Destroy(gameObject);
     }
 }

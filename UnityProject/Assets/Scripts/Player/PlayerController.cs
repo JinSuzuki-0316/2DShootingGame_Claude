@@ -153,6 +153,20 @@ public class PlayerController : MonoBehaviour
     {
         if (currentBarrier != null) return; // 既に展開中なら何もしない
         currentBarrier = Instantiate(barrierPrefab, transform.position, Quaternion.identity, transform);
+        Barrier barrierComp = currentBarrier.GetComponent<Barrier>();
+        if (barrierComp != null)
+        {
+            barrierComp.owner = this;
+        }
+    }
+
+    /// <summary>バリアが耐久切れで自壊した際にBarrier側から呼ばれ、参照を確実にクリアする</summary>
+    public void NotifyBarrierDestroyed(Barrier barrier)
+    {
+        if (currentBarrier == barrier.gameObject)
+        {
+            currentBarrier = null;
+        }
     }
 
     private void RecordHistory()
