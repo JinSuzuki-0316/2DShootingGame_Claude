@@ -13,6 +13,7 @@ public class CrawlingMissile : MonoBehaviour
     public int damage = 2;
     public float groundCheckDistance = 0.8f;
     public float groundEmbedOffset = 0.12f; // 着地時に地面へ少しめり込ませる量
+    public GameObject hitEffectPrefab;
 
     private bool isCrawling = false;
     private float direction = 1f; // 1: 右向き, -1: 左向き
@@ -84,6 +85,8 @@ public class CrawlingMissile : MonoBehaviour
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+            AudioManager.Instance?.PlayHit();
             Destroy(gameObject);
         }
     }

@@ -9,6 +9,7 @@ public class PlayerLaser : MonoBehaviour
     public float speed = 20f;
     public int damage = 1;
     public float lifeTime = 1.2f;
+    public GameObject hitEffectPrefab;
 
     private void Start()
     {
@@ -26,6 +27,8 @@ public class PlayerLaser : MonoBehaviour
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, other.transform.position, Quaternion.identity);
+            AudioManager.Instance?.PlayHit();
             // 貫通するのでDestroyしない
         }
     }

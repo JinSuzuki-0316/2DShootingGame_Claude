@@ -44,6 +44,10 @@ public class PlayerController : MonoBehaviour
     [Header("バリア")]
     public GameObject currentBarrier;
 
+    [Header("被弾・撃破エフェクト")]
+    public GameObject hitEffectPrefab;
+    public GameObject explosionPrefab;
+
     [Header("ライフ")]
     public int lives = 3;
     public bool isInvincible = false;
@@ -107,15 +111,18 @@ public class PlayerController : MonoBehaviour
         if (hasLaser)
         {
             Instantiate(laserPrefab, muzzleFront.position, muzzleFront.rotation);
+            AudioManager.Instance?.PlayLaser();
         }
         else if (hasDouble)
         {
             Instantiate(normalBulletPrefab, muzzleFront.position, muzzleFront.rotation);
             Instantiate(doubleBulletPrefab, muzzleDiagonal.position, muzzleDiagonal.rotation);
+            AudioManager.Instance?.PlayShoot();
         }
         else
         {
             Instantiate(normalBulletPrefab, muzzleFront.position, muzzleFront.rotation);
+            AudioManager.Instance?.PlayShoot();
         }
 
         // オプションも同じ武器で追従射撃
@@ -129,6 +136,7 @@ public class PlayerController : MonoBehaviour
     {
         if (missilePrefab == null || muzzleBottom == null) return;
         Instantiate(missilePrefab, muzzleBottom.position, Quaternion.identity);
+        AudioManager.Instance?.PlayMissile();
     }
 
     public void IncreaseSpeedLevel()
@@ -192,10 +200,14 @@ public class PlayerController : MonoBehaviour
             {
                 Barrier barrier = currentBarrier.GetComponent<Barrier>();
                 barrier.TakeHit();
+                if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+                AudioManager.Instance?.PlayDamage();
                 if (isEnemyBullet) Destroy(other.gameObject);
                 return;
             }
 
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+            AudioManager.Instance?.PlayDamage();
             Die();
             Destroy(other.gameObject);
         }
@@ -204,6 +216,12 @@ public class PlayerController : MonoBehaviour
     private void Die()
     {
         lives--;
+
+        if (explosionPrefab != null)
+        {
+            Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+        }
+        AudioManager.Instance?.PlayExplosion();
 
         // グラディウス方式：被弾で全パワーアップを喪失
         hasDouble = false;

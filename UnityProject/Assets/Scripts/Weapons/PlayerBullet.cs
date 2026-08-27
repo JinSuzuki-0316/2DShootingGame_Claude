@@ -10,6 +10,7 @@ public class PlayerBullet : MonoBehaviour
     public Vector2 direction = Vector2.right;
     public int damage = 1;
     public float lifeTime = 3f;
+    public GameObject hitEffectPrefab;
 
     private void Start()
     {
@@ -27,6 +28,8 @@ public class PlayerBullet : MonoBehaviour
         if (enemy != null)
         {
             enemy.TakeDamage(damage);
+            if (hitEffectPrefab != null) Instantiate(hitEffectPrefab, transform.position, Quaternion.identity);
+            AudioManager.Instance?.PlayHit();
             Destroy(gameObject);
         }
     }

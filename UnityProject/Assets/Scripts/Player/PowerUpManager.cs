@@ -77,6 +77,7 @@ public class PowerUpManager : MonoBehaviour
         stockedCapsules--;
         PowerUpType type = meterOrder[selectedIndex];
         Apply(type);
+        AudioManager.Instance?.PlayPowerUp();
         OnPowerUpActivated?.Invoke(type);
     }
 

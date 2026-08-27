@@ -42,6 +42,7 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         Time.timeScale = 0f;
+        AudioManager.Instance?.PlayGameOver();
     }
 
     /// <summary>ゲームを初期状態からやり直す</summary>

@@ -25,11 +25,15 @@ public class GameRoot : MonoBehaviour
     private GameObject hatchTemplate;
     private GameObject walkerTemplate;
     private GameObject bossTemplate;
+    private GameObject hitEffectTemplate;
+    private GameObject deathEffectTemplate;
 
     private void Awake()
     {
         BuildCamera();
         BuildTemplatesContainer();
+        BuildEffectTemplates();
+        BuildAudioManager();
         BuildWeaponTemplates();
         BuildEnemyTemplates();
         GameObject player = BuildPlayer();
@@ -38,6 +42,26 @@ public class GameRoot : MonoBehaviour
         BuildSpawner();
         BuildGameManager(scroller);
         BuildUI();
+    }
+
+    // ----------------------------------------------------------------
+    // ヒット／爆発エフェクトのテンプレート
+    // ----------------------------------------------------------------
+    private void BuildEffectTemplates()
+    {
+        hitEffectTemplate = EffectFactory.CreateHitSpark(new Color(1f, 0.95f, 0.6f));
+        hitEffectTemplate.transform.parent = templatesContainer.transform;
+        hitEffectTemplate.SetActive(true); // 親が非アクティブな間は動作せず、Instantiate時にルート化されると有効化される
+
+        deathEffectTemplate = EffectFactory.CreateExplosion(new Color(1f, 0.6f, 0.15f));
+        deathEffectTemplate.transform.parent = templatesContainer.transform;
+        deathEffectTemplate.SetActive(true);
+    }
+
+    private void BuildAudioManager()
+    {
+        GameObject audioObj = new GameObject("AudioManager");
+        audioObj.AddComponent<AudioManager>();
     }
 
     // ----------------------------------------------------------------
@@ -371,7 +395,13 @@ public class GameRoot : MonoBehaviour
         GameObject bgRoot = new GameObject("ScrollingBackground");
         ScrollingBackground scroller = bgRoot.AddComponent<ScrollingBackground>();
         scroller.scrollSpeed = 1.5f;
-        scroller.tileWidth = 20f;
+
+        // カメラの表示範囲(縦10ユニット前後)ぴったりのサイズだと、
+        // アスペクト比によって上下・左右が見切れてしまうため、
+        // 余裕を持たせた大きめのタイルサイズで生成する。
+        const float tileWorldWidth = 32f;
+        const float tileWorldHeight = 20f;
+        scroller.tileWidth = tileWorldWidth;
 
         Color topColor = new Color(0.06f, 0.05f, 0.18f);
         Color bottomColor = new Color(0.01f, 0.01f, 0.05f);
@@ -381,9 +411,9 @@ public class GameRoot : MonoBehaviour
         {
             GameObject tile = new GameObject("BGTile" + i);
             tile.transform.parent = bgRoot.transform;
-            tile.transform.position = new Vector3(-20f + i * 20f, 0f, 5f);
+            tile.transform.position = new Vector3(-tileWorldWidth + i * tileWorldWidth, 0f, 5f);
             SpriteRenderer sr = tile.AddComponent<SpriteRenderer>();
-            sr.sprite = SpriteFactory.CreateStarfieldTile(640, 320, 90, topColor, bottomColor);
+            sr.sprite = SpriteFactory.CreateStarfieldTile(1024, 640, 260, topColor, bottomColor);
             sr.sortingOrder = -10;
             tiles[i] = tile.transform;
         }

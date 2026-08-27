@@ -70,12 +70,17 @@ public class GameHUD : MonoBehaviour
 
     private string BuildMeterString(PowerUpManager pum)
     {
+        // カプセルを1つも持っていない（＝発動しても何も起きない）間は、
+        // どの項目もハイライトしない。以前はカーソルの初期値(0=SPEED)が
+        // そのまま光って見えてしまい、「強化できないのにSPEEDだけ光る」バグになっていた。
+        bool canActivate = pum.stockedCapsules > 0;
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < pum.meterOrder.Length; i++)
         {
             string label = i < Labels.Length ? Labels[i] : pum.meterOrder[i].ToString().ToUpper();
 
-            if (i == pum.selectedIndex)
+            if (canActivate && i == pum.selectedIndex)
             {
                 sb.Append("<color=").Append(ColorSelected).Append("><b>[ ").Append(label).Append(" ]</b></color>");
             }

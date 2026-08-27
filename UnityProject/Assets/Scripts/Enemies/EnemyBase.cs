@@ -36,6 +36,7 @@ public class EnemyBase : MonoBehaviour
         {
             Instantiate(explosionPrefab, transform.position, Quaternion.identity);
         }
+        AudioManager.Instance?.PlayExplosion();
 
         if (dropsCapsule && powerCapsulePrefab != null)
         {
